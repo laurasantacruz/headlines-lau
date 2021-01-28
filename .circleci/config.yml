@@ -19,3 +19,8 @@ jobs:
       - run:
           name: Deploying to App Engine
           command: gcloud app deploy app.yaml --version 1
+workflows:
+  version: 2
+  deploy_en_GCP:
+    jobs:
+      - deploy
