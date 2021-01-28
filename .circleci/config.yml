@@ -1,19 +1,21 @@
+version: 2.1
 jobs:
   deploy:
-    executor: heroku/default
+    docker:
+      - image: google/cloud-sdk
+    working_directory: ~/repo
     steps:
       - checkout
-      - heroku/install
+      - run: chmod +x ./app.yaml.sh
       - run:
-          command: >
-            echo "The command above installs Heroku, the command below deploys.
-            What you do inbetween is up to you!"
-      - heroku/deploy-via-git
-
-version: 2.1
-orbs:
-  heroku: circleci/heroku@0.0.10
-workflows:
-  heroku_deploy:
-    jobs:
-      - deploy
+         name: Copy across app.yaml config
+         command: ./app.yaml.sh > ./app.yaml
+      - run:
+          name: Set up gcloud config
+          command: |
+            echo $GCLOUD_SERVICE_KEY | base64 --decode | gcloud auth activate-service-account --key-file=-
+            gcloud --quiet config set project ${GOOGLE_PROJECT_ID}
+      - run: cat ./app.yaml
+      - run:
+          name: Deploying to App Engine
+          command: gcloud app deploy app.yaml --version 1
